@@ -1,0 +1,15 @@
+# Requirements for AI Safety Guardrails examples
+
+# Core package
+ai-safety-guardrails
+
+# Environment management
+python-dotenv
+
+# LLM integrations (optional)
+openai
+ollama
+
+# Additional utilities
+pyyaml
+asyncio

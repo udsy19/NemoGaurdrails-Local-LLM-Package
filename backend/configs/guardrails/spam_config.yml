@@ -1,0 +1,117 @@
+detector:
+  name: "spam"
+  enabled: true
+  type: "rule_based"
+  
+settings:
+  threshold: 0.6
+  strict_mode: false
+  case_sensitive: false
+  
+patterns:
+  - category: "promotional"
+    patterns:
+      - "click here"
+      - "buy now"
+      - "limited time offer"
+      - "act now"
+      - "special discount"
+      - "free trial"
+      - "earn money fast"
+      - "make money online"
+    weight: 0.7
+    
+  - category: "repetitive"
+    patterns:
+      - "!!!"
+      - "???"
+      - "..."
+    weight: 0.4
+    max_repetition: 3
+    
+  - category: "urgency"
+    patterns:
+      - "urgent"
+      - "immediate"
+      - "expire soon"
+      - "hurry up"
+      - "don't wait"
+      - "time sensitive"
+    weight: 0.5
+    
+  - category: "suspicious_links"
+    patterns:
+      - "bit.ly"
+      - "tinyurl"
+      - "shortened url"
+      - "click this link"
+    weight: 0.8
+    
+  - category: "low_quality"
+    patterns:
+      - "aaaaaa"
+      - "hehehe"
+      - "lololol"
+      - "wwwwww"
+    weight: 0.6
+
+features:
+  - name: "excessive_caps"
+    enabled: true
+    threshold: 0.3  # 30% of text in caps
+    weight: 0.4
+    
+  - name: "excessive_punctuation"
+    enabled: true
+    threshold: 0.1  # 10% punctuation
+    weight: 0.3
+    
+  - name: "repeated_characters"
+    enabled: true
+    threshold: 3  # More than 3 repeated chars
+    weight: 0.5
+    
+  - name: "length_check"
+    enabled: true
+    min_length: 2
+    max_length: 10000
+    weight: 0.2
+    
+  - name: "gibberish_detection"
+    enabled: true
+    consonant_ratio: 0.8
+    weight: 0.6
+
+whitelist:
+  - "legitimate business terms"
+  - "technical documentation"
+  - "educational content"
+  - "customer support"
+  
+blacklist:
+  - "get rich quick"
+  - "work from home scam"
+  - "pyramid scheme"
+  - "multi level marketing"
+
+actions:
+  on_detection:
+    - flag_as_spam
+    - reduce_priority
+    - log_incident
+    
+  messages:
+    flagged: "This content has been flagged as potential spam."
+    warning: "This message shows characteristics of spam content."
+    
+scoring:
+  enabled: true
+  algorithm: "weighted_sum"
+  normalize: true
+  
+logging:
+  enabled: true
+  log_level: "INFO"
+  include_content: false
+  include_score: true
+  include_features: true

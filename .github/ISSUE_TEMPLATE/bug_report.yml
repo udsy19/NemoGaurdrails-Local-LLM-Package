@@ -1,0 +1,136 @@
+name: Bug Report
+description: File a bug report to help us improve
+title: "[BUG] "
+labels: ["bug", "triage"]
+assignees:
+  - udsy19
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the form below with as much detail as possible.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what you see!
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+      placeholder: What should have happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Install the package with '...'
+        2. Run the command '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: code-sample
+    attributes:
+      label: Code sample
+      description: If applicable, add a minimal code sample that reproduces the issue
+      render: python
+      placeholder: |
+        from ai_safety_guardrails import SafetyGuard
+        
+        # Your code here that reproduces the issue
+
+  - type: textarea
+    id: error-output
+    attributes:
+      label: Error output
+      description: If there's an error message, please include the full traceback
+      render: text
+      placeholder: Paste the full error output here
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which component is affected?
+      options:
+        - Core SafetyGuard
+        - Detectors (Toxicity)
+        - Detectors (PII)
+        - Detectors (Prompt Injection)
+        - Detectors (Spam)
+        - Detectors (Topics)
+        - Detectors (Fact Check)
+        - CLI Tools
+        - Template System
+        - Integrations (OpenAI)
+        - Integrations (Ollama)
+        - Documentation
+        - Installation/Setup
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of AI Safety Guardrails are you running?
+      placeholder: "1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: What version of Python are you using?
+      placeholder: "3.9.0"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: What operating system are you using?
+      placeholder: "Ubuntu 22.04, macOS 13.0, Windows 11"
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment details
+      description: Any additional environment details that might be relevant
+      placeholder: |
+        - Docker: Yes/No
+        - Virtual environment: Yes/No
+        - GPU: Yes/No
+        - Memory: 8GB
+        - Other relevant details
+
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched existing issues to make sure this is not a duplicate
+          required: true
+        - label: I have provided all the requested information
+          required: true
+        - label: I have tested this with the latest version
+          required: false

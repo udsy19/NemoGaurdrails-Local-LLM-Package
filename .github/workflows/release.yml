@@ -1,0 +1,146 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.1)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as pre-release'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.9'
+    
+    - name: Get version from tag or input
+      id: get_version
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          VERSION="${{ github.event.inputs.version }}"
+          echo "version=v${VERSION}" >> $GITHUB_OUTPUT
+          echo "version_number=${VERSION}" >> $GITHUB_OUTPUT
+        else
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "version_number=${VERSION#v}" >> $GITHUB_OUTPUT
+        fi
+    
+    - name: Update version in package files
+      run: |
+        VERSION="${{ steps.get_version.outputs.version_number }}"
+        # Update version in __init__.py
+        sed -i "s/__version__ = \".*\"/__version__ = \"${VERSION}\"/" ai_safety_guardrails/__init__.py
+        # Update version in pyproject.toml if it has a static version
+        if grep -q "version =" pyproject.toml; then
+          sed -i "s/version = \".*\"/version = \"${VERSION}\"/" pyproject.toml
+        fi
+        echo "Updated version to ${VERSION}"
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install build twine
+        pip install -r requirements-minimal.txt
+        pip install spacy
+    
+    - name: Install spaCy model
+      run: python -m spacy download en_core_web_sm || echo "spaCy model download failed, continuing..."
+    
+    - name: Build package
+      run: |
+        python -m build
+        twine check dist/*
+    
+    - name: Generate changelog
+      id: changelog
+      run: |
+        # Get the latest tag (previous release)
+        PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+        
+        if [ -z "$PREVIOUS_TAG" ]; then
+          echo "## What's New" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "Initial release of AI Safety Guardrails package." >> CHANGELOG.md
+        else
+          echo "## What's New" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "### Changes since $PREVIOUS_TAG" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          git log --pretty=format:"- %s" $PREVIOUS_TAG..HEAD >> CHANGELOG.md
+        fi
+        
+        echo "" >> CHANGELOG.md
+        echo "## Features" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "- **Multiple Safety Detectors**: Toxicity, PII, prompt injection, spam, fact-checking, topics" >> CHANGELOG.md
+        echo "- **Dual APIs**: Library API for explicit control, Decorator API for transparent protection" >> CHANGELOG.md
+        echo "- **CLI Tools**: Testing, model management, and application generation" >> CHANGELOG.md
+        echo "- **Template System**: Quick-start applications for chat, API, Streamlit, and notebooks" >> CHANGELOG.md
+        echo "- **Production Ready**: Health monitoring, circuit breakers, performance analytics" >> CHANGELOG.md
+        echo "- **LLM Integration**: Built-in support for OpenAI, Ollama, Anthropic" >> CHANGELOG.md
+        echo "- **High Performance**: Async/await support throughout" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "## Installation" >> CHANGELOG.md
+        echo "" >> CHANGELOG.md
+        echo "\`\`\`bash" >> CHANGELOG.md
+        echo "pip install ai-safety-guardrails" >> CHANGELOG.md
+        echo "\`\`\`" >> CHANGELOG.md
+        
+        # Set output for GitHub release
+        echo "changelog<<EOF" >> $GITHUB_OUTPUT
+        cat CHANGELOG.md >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
+    
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_version.outputs.version }}
+        release_name: AI Safety Guardrails ${{ steps.get_version.outputs.version }}
+        body: ${{ steps.changelog.outputs.changelog }}
+        draft: false
+        prerelease: ${{ github.event.inputs.prerelease || false }}
+    
+    - name: Upload Release Assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/ai_safety_guardrails-${{ steps.get_version.outputs.version_number }}-py3-none-any.whl
+        asset_name: ai_safety_guardrails-${{ steps.get_version.outputs.version_number }}-py3-none-any.whl
+        asset_content_type: application/zip
+    
+    - name: Upload Source Distribution
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/ai_safety_guardrails-${{ steps.get_version.outputs.version_number }}.tar.gz
+        asset_name: ai_safety_guardrails-${{ steps.get_version.outputs.version_number }}.tar.gz
+        asset_content_type: application/gzip

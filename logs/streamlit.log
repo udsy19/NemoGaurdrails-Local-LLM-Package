@@ -1,0 +1,132 @@
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://localhost:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            
+2025-07-04 01:44:00.225 Uncaught app execution
+Traceback (most recent call last):
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 341, in <module>
+    main()
+    ~~~~^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 285, in main
+    all_detections.update(input_analysis)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not iterable
+2025-07-04 01:44:10.912 Uncaught app execution
+Traceback (most recent call last):
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 341, in <module>
+    main()
+    ~~~~^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 285, in main
+    all_detections.update(input_analysis)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not iterable
+2025-07-04 01:44:11.667 Uncaught app execution
+Traceback (most recent call last):
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 341, in <module>
+    main()
+    ~~~~^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 285, in main
+    all_detections.update(input_analysis)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not iterable
+2025-07-04 01:44:23.690 Uncaught app execution
+Traceback (most recent call last):
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 341, in <module>
+    main()
+    ~~~~^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 285, in main
+    all_detections.update(input_analysis)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not iterable
+2025-07-04 01:44:23.898 Uncaught app execution
+Traceback (most recent call last):
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 341, in <module>
+    main()
+    ~~~~^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 285, in main
+    all_detections.update(input_analysis)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not iterable
+2025-07-04 01:49:15.299 Uncaught app execution
+Traceback (most recent call last):
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 341, in <module>
+    main()
+    ~~~~^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 285, in main
+    all_detections.update(input_analysis)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not iterable
+2025-07-04 01:49:16.388 Uncaught app execution
+Traceback (most recent call last):
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 341, in <module>
+    main()
+    ~~~~^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 285, in main
+    all_detections.update(input_analysis)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not iterable
+2025-07-04 01:49:23.547 Uncaught app execution
+Traceback (most recent call last):
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 128, in exec_func_with_error_handling
+    result = func()
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/.venv/lib/python3.13/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 669, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 341, in <module>
+    main()
+    ~~~~^^
+  File "/Users/udsy/PycharmProjects/KPMG/NemoGaurdrails-Local-LLM/backend/app/streamlit_app.py", line 285, in main
+    all_detections.update(input_analysis)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+TypeError: 'NoneType' object is not iterable
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://localhost:8501
+
+  For better performance, install the Watchdog module:
+
+  $ xcode-select --install
+  $ pip install watchdog
+            

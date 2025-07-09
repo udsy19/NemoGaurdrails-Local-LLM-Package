@@ -1,0 +1,94 @@
+detector:
+  name: "topic"
+  enabled: true
+  type: "sentence_transformer"
+  
+model:
+  name: "all-MiniLM-L6-v2"
+  cache_dir: "~/.cache/sentence_transformers"
+  device: "auto"
+  
+settings:
+  threshold: 0.7
+  similarity_method: "cosine"
+  batch_size: 1
+  max_length: 384
+  
+restricted_topics:
+  - category: "illegal_activities"
+    examples:
+      - "how to make illegal drugs"
+      - "hacking into systems"
+      - "creating weapons"
+      - "money laundering"
+      - "tax evasion"
+    threshold: 0.8
+    severity: "high"
+    
+  - category: "adult_content"
+    examples:
+      - "explicit sexual content"
+      - "pornographic material"
+      - "sexual violence"
+    threshold: 0.7
+    severity: "high"
+    
+  - category: "violence_harm"
+    examples:
+      - "how to hurt someone"
+      - "self-harm instructions"
+      - "violence against others"
+      - "creating dangerous situations"
+    threshold: 0.75
+    severity: "high"
+    
+  - category: "misinformation"
+    examples:
+      - "false medical advice"
+      - "conspiracy theories"
+      - "fake news creation"
+      - "misleading information"
+    threshold: 0.6
+    severity: "medium"
+    
+  - category: "privacy_violations"
+    examples:
+      - "doxxing individuals"
+      - "sharing private information"
+      - "stalking methods"
+    threshold: 0.7
+    severity: "high"
+
+allowed_topics:
+  - category: "educational"
+    examples:
+      - "learning programming"
+      - "understanding science"
+      - "historical information"
+      - "academic research"
+    boost_factor: 0.2
+    
+  - category: "creative"
+    examples:
+      - "writing stories"
+      - "creative projects"
+      - "art and design"
+      - "music composition"
+    boost_factor: 0.1
+
+actions:
+  on_detection:
+    - classify_topic
+    - check_restrictions
+    - log_classification
+    
+  messages:
+    restricted: "This topic is restricted. Please try asking about something else."
+    warning: "This topic may require special consideration. Proceeding with caution."
+    
+logging:
+  enabled: true
+  log_level: "INFO"
+  include_content: false
+  include_classification: true
+  include_confidence: true

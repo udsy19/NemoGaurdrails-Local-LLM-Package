@@ -1,0 +1,77 @@
+# Include documentation and metadata files
+include README.md
+include LICENSE
+include CHANGELOG.md
+include setup.py
+include pyproject.toml
+include setup.cfg
+
+# Include configuration files
+include *.yml
+include *.yaml
+include *.json
+include *.toml
+
+# Include all template files
+recursive-include ai_safety_guardrails/templates *
+recursive-include ai_safety_guardrails/configs *
+
+# Include CLI scripts and utilities
+recursive-include ai_safety_guardrails/cli *
+recursive-include ai_safety_guardrails/utils *
+
+# Include package data
+include ai_safety_guardrails/*.yml
+include ai_safety_guardrails/*.yaml
+include ai_safety_guardrails/*.json
+
+# Exclude development and build files
+exclude .gitignore
+exclude .DS_Store
+exclude *.pyc
+exclude *.pyo
+exclude *.pyd
+exclude __pycache__
+exclude .pytest_cache
+exclude .mypy_cache
+exclude .coverage
+exclude htmlcov
+exclude .tox
+exclude .venv
+exclude venv
+exclude env
+exclude ENV
+exclude .env
+exclude .env.local
+exclude .env.*.local
+
+# Exclude build artifacts
+exclude build
+exclude dist
+exclude *.egg-info
+exclude .eggs
+
+# Exclude IDE files
+exclude .vscode
+exclude .idea
+exclude *.sublime-*
+exclude *.swp
+exclude *.swo
+exclude *~
+
+# Exclude test files from distribution
+exclude tests
+recursive-exclude tests *
+exclude test_*
+exclude *_test.py
+
+# Exclude documentation build files
+exclude docs/_build
+recursive-exclude docs/_build *
+
+# Exclude logs and temporary files
+exclude logs
+recursive-exclude logs *
+exclude *.log
+exclude *.tmp
+exclude *.temp

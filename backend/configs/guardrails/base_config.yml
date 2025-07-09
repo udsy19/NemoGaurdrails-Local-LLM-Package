@@ -1,0 +1,45 @@
+models:
+  - type: main
+    engine: ollama
+    model: llama3
+
+instructions:
+  - type: general
+    content: |
+      You are a helpful AI assistant with built-in safety guardrails.
+      You should provide accurate, helpful responses while adhering to safety guidelines.
+      If content is flagged by safety systems, explain why and offer alternatives when appropriate.
+
+sample_conversation: |
+  user: Hello! How can you help me today?
+  assistant: Hello! I'm an AI assistant with built-in safety features. I can help you with a wide variety of tasks like answering questions, writing, analysis, coding, and creative projects. My responses go through safety checks to ensure they're appropriate and helpful. What would you like assistance with?
+  
+  user: What safety features do you have?
+  assistant: I have several safety detection systems that monitor both input and output:
+  - Toxicity detection to filter harmful content
+  - PII detection to protect personal information  
+  - Prompt injection detection to prevent manipulation
+  - Topic classification to avoid restricted subjects
+  - Fact-checking to identify claims needing verification
+  - Spam detection to filter low-quality content
+  
+  These work together to ensure our conversation remains safe and productive.
+
+rails:
+  input:
+    flows:
+      - check input
+  
+  output:
+    flows:
+      - check output
+
+actions:
+  - name: check_all_detectors
+    type: system
+  
+  - name: generate_with_ollama
+    type: system
+  
+  - name: chat_with_ollama
+    type: system

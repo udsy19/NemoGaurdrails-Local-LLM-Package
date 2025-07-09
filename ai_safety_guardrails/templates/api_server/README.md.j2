@@ -1,0 +1,242 @@
+# {{ app_name }}
+
+AI Safety Guardrails API Server with {{ llm_provider.title() }} Integration
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Environment Setup
+
+Create a `.env` file:
+
+```bash
+# {{ llm_provider.title() }} Configuration
+{% if llm_provider == 'openai' %}
+OPENAI_API_KEY=your_openai_api_key_here
+{% elif llm_provider == 'ollama' %}
+OLLAMA_HOST=http://localhost:11434
+{% elif llm_provider == '' %}
+ANTHROPIC_API_KEY=your__api_key_here
+{% endif %}
+
+# Optional: Custom model cache directory
+AI_SAFETY_CACHE_DIR=/path/to/model/cache
+```
+
+### 3. Run the Server
+
+```bash
+python main.py
+```
+
+The API will be available at: http://localhost:8000
+
+## 📚 API Documentation
+
+### Interactive Docs
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+### Main Endpoints
+
+#### 🤖 Chat with Safety Protection
+```bash
+POST /chat
+```
+
+**Request:**
+```json
+{
+  "message": "Hello, how are you?",
+  "model": "{{ model_default }}",
+  "max_tokens": 150,
+  "temperature": 0.7
+}
+```
+
+**Response:**
+```json
+{
+  "response": "Hello! I'm doing well, thank you for asking...",
+  "blocked": false,
+  "block_reason": null,
+  "safety_scores": {
+    "toxicity": {"blocked": false, "confidence": 0.1},
+    "pii": {"blocked": false, "confidence": 0.0}
+  },
+  "model_used": "{{ model_default }}",
+  "processing_time": 1.234
+}
+```
+
+#### 🛡️ Safety Check Only
+```bash
+POST /safety-check
+```
+
+**Request:**
+```json
+{
+  "text": "Check this text for safety issues",
+  "detectors": ["toxicity", "pii"]
+}
+```
+
+**Response:**
+```json
+{
+  "blocked": false,
+  "results": {
+    "toxicity": {"blocked": false, "confidence": 0.1, "reason": null},
+    "pii": {"blocked": false, "confidence": 0.0, "reason": null}
+  },
+  "overall_confidence": 0.1,
+  "processing_time": 0.456
+}
+```
+
+#### 🏥 Health Check
+```bash
+GET /health
+```
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "detectors_loaded": {{ detectors|length }},
+  "llm_provider": "{{ llm_provider }}",
+  "models_available": ["{{ model_default }}"],
+  "uptime": 3600.0
+}
+```
+
+#### 📋 List Detectors
+```bash
+GET /detectors
+```
+
+#### 🤖 List Models
+```bash
+GET /models
+```
+
+## 🔧 Configuration
+
+Edit `config.yml` to customize:
+
+- **Safety detectors and thresholds**
+- **LLM provider settings**
+- **Performance parameters**
+- **Logging configuration**
+
+### Available Detectors
+
+{% for detector in detectors %}
+- **{{ detector }}**: {% if detector == 'toxicity' %}Harmful/offensive content{% elif detector == 'pii' %}Personal information{% elif detector == 'prompt_injection' %}AI manipulation attempts{% elif detector == 'topics' %}Content categories{% elif detector == 'spam' %}Promotional content{% elif detector == 'fact_check' %}Factual accuracy{% endif %}
+{% endfor %}
+
+## 🚀 Production Deployment
+
+### Docker Deployment
+
+```dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+### Environment Variables
+
+```bash
+# Required
+{% if llm_provider == 'openai' %}
+OPENAI_API_KEY=your_key
+{% elif llm_provider == 'ollama' %}
+OLLAMA_HOST=http://localhost:11434
+{% elif llm_provider == '' %}
+ANTHROPIC_API_KEY=your_key
+{% endif %}
+
+# Optional
+AI_SAFETY_CACHE_DIR=/app/models
+AI_SAFETY_LOG_LEVEL=INFO
+```
+
+### Performance Tuning
+
+For production, consider:
+
+1. **Scaling**: Use multiple workers with Gunicorn
+2. **Caching**: Enable model caching
+3. **Monitoring**: Add Prometheus metrics
+4. **Rate Limiting**: Implement request limits
+
+## 🧪 Testing
+
+### Basic Test
+
+```bash
+curl -X POST "http://localhost:8000/chat" \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello world"}'
+```
+
+### Safety Test
+
+```bash
+curl -X POST "http://localhost:8000/safety-check" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "This is toxic content"}'
+```
+
+## 🔒 Security Considerations
+
+1. **API Keys**: Never commit API keys to version control
+2. **CORS**: Configure CORS properly for production
+3. **Rate Limiting**: Implement rate limiting for public APIs
+4. **Monitoring**: Set up logging and monitoring
+5. **Validation**: All inputs are validated automatically
+
+## 📊 Monitoring
+
+The API provides built-in monitoring:
+
+- **Health checks**: `/health` endpoint
+- **Metrics**: Processing times and success rates
+- **Logging**: Structured logging to files
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+**Service not initialized (503 error)**
+- Check API keys in environment variables
+- Verify model downloads completed
+- Check logs for initialization errors
+
+**Model loading errors**
+- Ensure internet connection for model downloads
+- Check available disk space
+- Verify model cache permissions
+
+**Slow responses**
+- Consider enabling GPU acceleration
+- Adjust detector thresholds
+- Monitor resource usage
+
+## 📝 License
+
+This project is generated using AI Safety Guardrails templates.
+See the main package license for details.

@@ -1,0 +1,316 @@
+# {{ app_name }}
+
+Interactive AI Safety Dashboard built with Streamlit and {{ llm_provider.title() }} Integration
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Environment Setup
+
+Create a `.env` file:
+
+```bash
+# {{ llm_provider.title() }} Configuration
+{% if llm_provider == 'openai' %}
+OPENAI_API_KEY=your_openai_api_key_here
+{% elif llm_provider == 'ollama' %}
+OLLAMA_HOST=http://localhost:11434
+{% elif llm_provider == '' %}
+ANTHROPIC_API_KEY=your__api_key_here
+{% endif %}
+
+# Optional: Custom model cache directory
+AI_SAFETY_CACHE_DIR=/path/to/model/cache
+```
+
+### 3. Run the Application
+
+```bash
+streamlit run app.py
+```
+
+The dashboard will open in your browser at: http://localhost:8501
+
+## 🎯 Features
+
+### 💬 Protected AI Chat
+- Real-time safety checking during conversations
+- Multiple LLM model selection
+- Configurable safety thresholds
+- Chat history with safety annotations
+
+### 🛡️ Safety Analysis
+- Standalone text safety checking
+- Detailed detector results
+- Visual confidence scores
+- Customizable detector selection
+
+### 📊 Analytics Dashboard
+- Real-time safety metrics
+- Detector performance tracking
+- Response time monitoring
+- Safety event logging
+
+### ⚙️ System Management
+- Live system status monitoring
+- Configuration management
+- Environment variable checking
+- Data clearing and reset
+
+## 🔧 Dashboard Components
+
+### Safety Controls Sidebar
+- **System Initialization**: One-click setup
+- **Detector Toggle**: Enable/disable specific detectors
+- **Model Selection**: Choose from available models
+- **Threshold Adjustment**: Real-time safety tuning
+
+### Main Tabs
+
+#### 1. 💬 Chat Tab
+- **Protected Conversations**: AI chat with real-time safety
+- **Safety Annotations**: Clear blocking reasons
+- **Model Parameters**: Token limits and temperature control
+- **History View**: Last 10 conversations with safety status
+
+#### 2. 🛡️ Safety Check Tab
+- **Text Analysis**: Standalone safety checking
+- **Detector Results**: Individual detector outcomes
+- **Confidence Visualization**: Bar charts of safety scores
+- **Custom Detector Selection**: Choose which detectors to run
+
+#### 3. 📊 Dashboard Tab
+- **Key Metrics**: Total requests, block rate, response time
+- **Detector Performance**: Trigger rates by detector type
+- **Response Trends**: Real-time performance monitoring
+- **Recent Events**: Log of safety decisions
+
+#### 4. ⚙️ System Tab
+- **Status Monitoring**: Component health checking
+- **Configuration View**: Current settings display
+- **Environment Check**: API key and setting validation
+- **Data Management**: Clear history and reset metrics
+
+## 🎨 Customization
+
+### Theme Configuration
+Edit `config.yml` to customize:
+
+```yaml
+streamlit:
+  theme:
+    primary_color: "#FF6B6B"
+    background_color: "#FFFFFF"
+    secondary_background_color: "#F0F2F6"
+    text_color: "#262730"
+```
+
+### Dashboard Settings
+```yaml
+dashboard:
+  max_chat_history: 100
+  max_safety_logs: 100
+  refresh_interval: 30
+```
+
+### Chart Appearance
+```yaml
+charts:
+  height: 400
+  color_scheme: ["#FF6B6B", "#4ECDC4", "#45B7D1"]
+```
+
+## 📊 Analytics Features
+
+### Real-time Metrics
+- **Total Requests**: Count of all processed messages
+- **Block Rate**: Percentage of blocked content
+- **Response Time**: Average processing duration
+- **Detector Stats**: Individual detector performance
+
+### Visualizations
+- **Bar Charts**: Detector trigger rates
+- **Line Graphs**: Response time trends
+- **Data Tables**: Recent safety events
+- **Status Indicators**: System health
+
+### Data Export
+Safety logs and metrics can be accessed programmatically:
+
+```python
+# Access session state data
+chat_history = st.session_state.chat_history
+safety_logs = st.session_state.safety_logs
+metrics = st.session_state.metrics
+```
+
+## 🔒 Security Features
+
+### Real-time Protection
+- Input validation before LLM processing
+- Output filtering after LLM response
+- Configurable safety thresholds
+- Multiple detector types
+
+### Available Detectors
+{% for detector in detectors %}
+- **{{ detector.title() }}**: {% if detector == 'toxicity' %}Harmful/offensive content detection{% elif detector == 'pii' %}Personal information protection{% elif detector == 'prompt_injection' %}AI manipulation prevention{% elif detector == 'topics' %}Content category filtering{% elif detector == 'spam' %}Promotional content detection{% elif detector == 'fact_check' %}Factual accuracy checking{% endif %}
+{% endfor %}
+
+### Safety Thresholds
+- **Adjustable Sensitivity**: Real-time threshold modification
+- **Per-Detector Control**: Individual detector tuning
+- **Visual Feedback**: Immediate threshold impact
+
+## 🚀 Production Deployment
+
+### Docker Deployment
+
+```dockerfile
+FROM python:3.9-slim
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+
+EXPOSE 8501
+
+CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+```
+
+### Cloud Deployment
+
+**Streamlit Cloud:**
+1. Connect your GitHub repository
+2. Set environment variables in dashboard
+3. Deploy directly from repository
+
+**AWS/GCP/Azure:**
+- Use container services with Docker image
+- Configure environment variables
+- Set up load balancing if needed
+
+### Environment Variables
+
+```bash
+# Required
+{% if llm_provider == 'openai' %}
+OPENAI_API_KEY=your_key
+{% elif llm_provider == 'ollama' %}
+OLLAMA_HOST=http://localhost:11434
+{% elif llm_provider == '' %}
+ANTHROPIC_API_KEY=your_key
+{% endif %}
+
+# Optional
+AI_SAFETY_CACHE_DIR=/app/models
+AI_SAFETY_LOG_LEVEL=INFO
+STREAMLIT_SERVER_PORT=8501
+```
+
+## 🧪 Testing
+
+### Basic Functionality Test
+
+```bash
+# Test safe content
+echo "Hello, how are you today?" | streamlit run app.py
+```
+
+### Safety Detection Test
+
+```bash
+# Test with potentially unsafe content
+echo "This is toxic content" | streamlit run app.py
+```
+
+### Performance Test
+- Monitor dashboard metrics during usage
+- Check response times in analytics tab
+- Verify detector performance rates
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+**Streamlit won't start**
+- Check Python version (3.9+)
+- Verify all dependencies installed
+- Check for port conflicts
+
+**Models not loading**
+- Verify internet connection
+- Check disk space for model cache
+- Confirm API keys are set
+
+**Slow performance**
+- Reduce concurrent detections in config
+- Lower model complexity
+- Check system resources
+
+**Dashboard not updating**
+- Use browser refresh
+- Check for JavaScript errors
+- Verify session state
+
+### Debug Mode
+
+Enable debug logging:
+
+```bash
+export AI_SAFETY_LOG_LEVEL=DEBUG
+streamlit run app.py
+```
+
+### Performance Optimization
+
+For better performance:
+1. **Reduce detector count**: Disable unused detectors
+2. **Adjust thresholds**: Higher thresholds = faster processing
+3. **Limit history**: Keep smaller chat/log history
+4. **Cache models**: Ensure model caching is enabled
+
+## 📱 Mobile Support
+
+The dashboard is responsive and works on mobile devices:
+- **Touch-friendly controls**
+- **Responsive layouts**
+- **Mobile-optimized charts**
+- **Sidebar auto-collapse**
+
+## 🆘 Support
+
+### Resources
+- **Configuration**: Edit `config.yml` for customization
+- **Logs**: Check `{{ app_name.lower().replace(' ', '_') }}_safety.log`
+- **Metrics**: Use built-in analytics dashboard
+- **Help**: Use Streamlit's built-in help system
+
+### Common Customizations
+
+**Add new detector:**
+1. Update `config.yml` detectors section
+2. Add to sidebar checkbox options
+3. Include in enabled_detectors logic
+
+**Modify chart colors:**
+1. Edit `config.yml` chart color_scheme
+2. Update Plotly chart configurations
+3. Restart application
+
+**Change dashboard layout:**
+1. Modify Streamlit column configurations
+2. Adjust tab organization
+3. Update responsive breakpoints
+
+## 📝 License
+
+This project is generated using AI Safety Guardrails templates.
+See the main package license for details.

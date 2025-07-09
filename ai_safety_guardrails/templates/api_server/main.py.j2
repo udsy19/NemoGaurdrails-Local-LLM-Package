@@ -1,0 +1,315 @@
+#!/usr/bin/env python3
+"""
+{{ app_name }} - AI Safety Guardrails API Server
+Generated with AI Safety Guardrails Template System
+"""
+
+import asyncio
+import os
+from contextlib import asynccontextmanager
+from typing import Any, Dict, List, Optional
+
+import uvicorn
+from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
+
+# AI Safety Guardrails imports
+from ai_safety_guardrails import SafetyGuard, safe_ai
+
+{% if llm_provider == 'openai' %}
+from ai_safety_guardrails.integrations import OpenAIClient
+
+{% elif llm_provider == 'ollama' %}
+from ai_safety_guardrails.integrations import OllamaClient
+
+{% elif llm_provider == '' %}
+import 
+
+{% endif %}
+
+# Configuration
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Global variables
+safety_guard = None
+{% if llm_provider == 'openai' %}
+llm_client = None
+{% elif llm_provider == 'ollama' %}
+llm_client = None
+{% elif llm_provider == '' %}
+_client = None
+{% endif %}
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan manager"""
+    global safety_guard{% if llm_provider == 'openai' %}, llm_client{% elif llm_provider == 'ollama' %}, llm_client{% elif llm_provider == '' %}, _client{% endif %}
+    
+    # Startup
+    print("🛡️  Initializing AI Safety Guardrails...")
+    safety_guard = SafetyGuard(
+        detectors={{ detectors | tojson }},
+        config_file="config.yml"
+    )
+    
+    {% if llm_provider == 'openai' %}
+    print("🤖 Initializing OpenAI client...")
+    llm_client = OpenAIClient(api_key=os.getenv("OPENAI_API_KEY"))
+    await llm_client.test_connection()
+    {% elif llm_provider == 'ollama' %}
+    print("🦙 Initializing Ollama client...")
+    llm_client = OllamaClient(host=os.getenv("OLLAMA_HOST", "http://localhost:11434"))
+    await llm_client.test_connection()
+    {% elif llm_provider == '' %}
+    print("🧠 Initializing  client...")
+    _client = .(api_key=os.getenv("ANTHROPIC_API_KEY"))
+    {% endif %}
+    
+    print("✅ Application startup complete!")
+    
+    yield
+    
+    # Shutdown
+    print("🔄 Shutting down AI Safety Guardrails...")
+    if safety_guard:
+        await safety_guard.cleanup()
+    print("👋 Application shutdown complete!")
+
+# FastAPI app
+app = FastAPI(
+    title="{{ app_name }}",
+    description="AI Safety Guardrails API Server with {{ llm_provider.title() }} integration",
+    version="1.0.0",
+    lifespan=lifespan
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Configure appropriately for production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Request/Response models
+class ChatRequest(BaseModel):
+    message: str
+    model: Optional[str] = "{{ model_default }}"
+    max_tokens: Optional[int] = 150
+    temperature: Optional[float] = 0.7
+
+class ChatResponse(BaseModel):
+    response: str
+    blocked: bool = False
+    block_reason: Optional[str] = None
+    safety_scores: Optional[Dict[str, Any]] = None
+    model_used: str
+    processing_time: float
+
+class SafetyCheckRequest(BaseModel):
+    text: str
+    detectors: Optional[List[str]] = None
+
+class SafetyCheckResponse(BaseModel):
+    blocked: bool
+    results: Dict[str, Any]
+    overall_confidence: float
+    processing_time: float
+
+class HealthResponse(BaseModel):
+    status: str
+    detectors_loaded: int
+    llm_provider: str
+    models_available: List[str]
+    uptime: float
+
+# API Routes
+@app.get("/", response_model=Dict[str, str])
+async def root():
+    """Root endpoint"""
+    return {
+        "message": "{{ app_name }} - AI Safety Guardrails API Server",
+        "version": "1.0.0",
+        "llm_provider": "{{ llm_provider }}",
+        "docs": "/docs"
+    }
+
+@app.post("/chat", response_model=ChatResponse)
+async def chat(request: ChatRequest):
+    """Protected chat endpoint with safety guardrails"""
+    if not safety_guard{% if llm_provider == 'openai' %} or not llm_client{% elif llm_provider == 'ollama' %} or not llm_client{% elif llm_provider == '' %} or not _client{% endif %}:
+        raise HTTPException(status_code=503, detail="Service not initialized")
+    
+    try:
+        import time
+        start_time = time.time()
+        
+        {% if llm_provider == 'openai' %}
+        # Create safe chat function
+        safe_chat = llm_client.create_safe_chat_function(model=request.model)
+        
+        # Protected execution
+        result = await safety_guard.protect(
+            input_text=request.message,
+            llm_function=safe_chat,
+            temperature=request.temperature,
+            max_tokens=request.max_tokens
+        )
+        {% elif llm_provider == 'ollama' %}
+        # Create safe chat function
+        safe_chat = llm_client.create_safe_chat_function(model=request.model)
+        
+        # Protected execution
+        result = await safety_guard.protect(
+            input_text=request.message,
+            llm_function=safe_chat
+        )
+        {% elif llm_provider == '' %}
+        #  chat function
+        async def _chat(prompt: str) -> str:
+            response = await _client.messages.create(
+                model=request.model,
+                max_tokens=request.max_tokens,
+                temperature=request.temperature,
+                messages=[{"role": "user", "content": prompt}]
+            )
+            return response.content[0].text
+        
+        # Protected execution
+        result = await safety_guard.protect(
+            input_text=request.message,
+            llm_function=_chat
+        )
+        {% endif %}
+        
+        processing_time = time.time() - start_time
+        
+        return ChatResponse(
+            response=result.response if not result.blocked else "Request blocked for safety reasons.",
+            blocked=result.blocked,
+            block_reason=result.block_reason if result.blocked else None,
+            safety_scores=result.safety_results,
+            model_used=request.model,
+            processing_time=processing_time
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Chat error: {str(e)}")
+
+@app.post("/safety-check", response_model=SafetyCheckResponse)
+async def safety_check(request: SafetyCheckRequest):
+    """Check text safety without LLM interaction"""
+    if not safety_guard:
+        raise HTTPException(status_code=503, detail="Safety guard not initialized")
+    
+    try:
+        import time
+        start_time = time.time()
+        
+        # Analyze text safety
+        results = await safety_guard.analyze_text(
+            text=request.text,
+            detectors=request.detectors
+        )
+        
+        processing_time = time.time() - start_time
+        
+        # Determine if blocked
+        blocked = any(result.blocked for result in results.values())
+        overall_confidence = max((result.confidence for result in results.values()), default=0.0)
+        
+        return SafetyCheckResponse(
+            blocked=blocked,
+            results={name: {
+                "blocked": result.blocked,
+                "confidence": result.confidence,
+                "reason": result.reason
+            } for name, result in results.items()},
+            overall_confidence=overall_confidence,
+            processing_time=processing_time
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Safety check error: {str(e)}")
+
+@app.get("/health", response_model=HealthResponse)
+async def health():
+    """Health check endpoint"""
+    try:
+        {% if llm_provider == 'openai' %}
+        models = await llm_client.get_available_models() if llm_client else []
+        {% elif llm_provider == 'ollama' %}
+        models = await llm_client.get_available_models() if llm_client else []
+        {% elif llm_provider == '' %}
+        models = ["-3-sonnet-20240229", "-3-haiku-20240307"] if _client else []
+        {% endif %}
+        
+        health_status = await safety_guard.health_check() if safety_guard else None
+        
+        return HealthResponse(
+            status="healthy" if safety_guard{% if llm_provider == 'openai' %} and llm_client{% elif llm_provider == 'ollama' %} and llm_client{% elif llm_provider == '' %} and _client{% endif %} else "unhealthy",
+            detectors_loaded=len(health_status.detectors) if health_status else 0,
+            llm_provider="{{ llm_provider }}",
+            models_available=models,
+            uptime=health_status.uptime if health_status else 0.0
+        )
+        
+    except Exception as e:
+        return HealthResponse(
+            status="unhealthy",
+            detectors_loaded=0,
+            llm_provider="{{ llm_provider }}",
+            models_available=[],
+            uptime=0.0
+        )
+
+@app.get("/detectors")
+async def list_detectors():
+    """List available safety detectors"""
+    if not safety_guard:
+        raise HTTPException(status_code=503, detail="Safety guard not initialized")
+    
+    return {
+        "detectors": list(safety_guard.detectors.keys()),
+        "total": len(safety_guard.detectors)
+    }
+
+@app.get("/models")
+async def list_models():
+    """List available LLM models"""
+    try:
+        {% if llm_provider == 'openai' %}
+        models = await llm_client.get_available_models() if llm_client else []
+        {% elif llm_provider == 'ollama' %}
+        models = await llm_client.get_available_models() if llm_client else []
+        {% elif llm_provider == '' %}
+        models = [
+            "-3-opus-20240229",
+            "-3-sonnet-20240229", 
+            "-3-haiku-20240307"
+        ] if _client else []
+        {% endif %}
+        
+        return {
+            "provider": "{{ llm_provider }}",
+            "models": models,
+            "total": len(models)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error listing models: {str(e)}")
+
+# Run the application
+if __name__ == "__main__":
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )

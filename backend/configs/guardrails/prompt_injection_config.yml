@@ -1,0 +1,78 @@
+detector:
+  name: "prompt_injection"
+  enabled: true
+  type: "rule_based"
+  
+settings:
+  threshold: 0.5
+  strict_mode: false
+  case_sensitive: false
+  
+patterns:
+  - category: "instruction_override"
+    patterns:
+      - "ignore previous instructions"
+      - "forget everything above"
+      - "disregard all previous"
+      - "new instructions:"
+      - "override instructions"
+    weight: 0.9
+    
+  - category: "role_manipulation"
+    patterns:
+      - "you are now"
+      - "pretend to be"
+      - "act as if"
+      - "assume the role"
+      - "roleplay as"
+    weight: 0.7
+    
+  - category: "system_bypass"
+    patterns:
+      - "bypass safety"
+      - "ignore safety"
+      - "disable filtering"
+      - "turn off guards"
+      - "remove restrictions"
+    weight: 0.95
+    
+  - category: "jailbreak_attempts"
+    patterns:
+      - "developer mode"
+      - "godmode"
+      - "unrestricted mode"
+      - "admin mode"
+      - "debug mode"
+    weight: 0.8
+    
+  - category: "encoding_attempts"
+    patterns:
+      - "base64:"
+      - "rot13:"
+      - "hex:"
+      - "decode the following"
+      - "translate from"
+    weight: 0.6
+
+advanced_detection:
+  enabled: true
+  max_instruction_repetition: 3
+  suspicious_length_threshold: 1000
+  unicode_normalization: true
+  
+actions:
+  on_detection:
+    - block_content
+    - log_incident
+    - increase_vigilance
+    
+  messages:
+    blocked: "This input appears to contain prompt injection attempts and has been blocked."
+    warning: "Your input contains patterns that may be attempting to manipulate the AI system."
+    
+logging:
+  enabled: true
+  log_level: "WARNING"
+  include_content: true  # Important for security analysis
+  include_patterns: true
+  include_score: true

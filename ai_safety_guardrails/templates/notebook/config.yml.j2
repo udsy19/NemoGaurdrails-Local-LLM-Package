@@ -1,0 +1,113 @@
+# AI Safety Guardrails Configuration for {{ app_name }}
+# Generated with AI Safety Guardrails Template System
+
+detectors:
+  {% for detector in detectors %}
+  {{ detector }}:
+    enabled: true
+    {% if detector == 'toxicity' %}
+    threshold: 0.7
+    model: "martin-ha/toxic-comment-model"
+    {% elif detector == 'pii' %}
+    sensitivity: "high"
+    redact: false  # For notebook visibility
+    entities: ["EMAIL", "PHONE", "SSN", "CREDIT_CARD"]
+    {% elif detector == 'prompt_injection' %}
+    threshold: 0.6
+    aggressive: true
+    {% elif detector == 'topics' %}
+    threshold: 0.7
+    blocked_topics: ["violence", "illegal_activities", "adult_content"]
+    {% elif detector == 'spam' %}
+    threshold: 0.6
+    aggressive: false
+    {% elif detector == 'fact_check' %}
+    threshold: 0.5
+    enabled: false  # Experimental feature
+    {% endif %}
+  {% endfor %}
+
+# Global safety settings
+safety:
+  fail_mode: "open"              # "open" (allow on failure) or "closed" (block on failure)
+  max_concurrent_detections: 3   # Lower for Jupyter
+  detection_timeout: 30
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 3
+    recovery_timeout: 30
+
+# Model management
+models:
+  cache_dir: "~/.ai_safety_models"
+  auto_download: true
+  download_timeout: 300
+
+# Performance settings
+performance:
+  enable_metrics: true
+  metrics_retention: 7  # days
+  timeout: 30
+  max_concurrent: 3     # Jupyter friendly
+
+# Logging configuration
+logging:
+  level: "INFO"
+  file: "./{{ app_name.lower().replace(' ', '_') }}_safety.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  max_file_size: "10MB"
+  backup_count: 3
+
+# Jupyter notebook specific settings
+notebook:
+  title: "{{ app_name }}"
+  auto_display_results: true
+  max_output_length: 1000
+  show_processing_time: true
+  
+  # Visualization settings
+  plots:
+    style: "seaborn"
+    figsize: [12, 8]
+    dpi: 100
+  
+  # Benchmark settings
+  benchmark:
+    max_test_cases: 50
+    timeout_per_test: 10
+    save_results: true
+
+# LLM Provider Configuration
+llm:
+  provider: "{{ llm_provider }}"
+  {% if llm_provider == 'openai' %}
+  default_model: "{{ model_default }}"
+  api_key_env: "OPENAI_API_KEY"
+  base_url: "https://api.openai.com/v1"
+  timeout: 120
+  available_models: ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo-preview"]
+  {% elif llm_provider == 'ollama' %}
+  default_model: "{{ model_default }}"
+  host_env: "OLLAMA_HOST"
+  default_host: "http://localhost:11434"
+  timeout: 120
+  available_models: ["llama2", "llama2:13b", "mistral", "codellama"]
+  {% elif llm_provider == '' %}
+  default_model: "{{ model_default }}"
+  api_key_env: "ANTHROPIC_API_KEY"
+  timeout: 120
+  available_models: ["-3-haiku-20240307", "-3-sonnet-20240229", "-3-opus-20240229"]
+  {% endif %}
+
+# Health monitoring
+health:
+  check_interval: 60  # seconds
+  timeout: 10
+  detailed_checks: true  # Detailed for analysis
+
+# Testing configuration
+testing:
+  enable_benchmarks: true
+  save_test_results: true
+  compare_thresholds: [0.3, 0.5, 0.7, 0.9]
+  edge_case_testing: true

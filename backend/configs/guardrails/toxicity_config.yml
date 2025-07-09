@@ -1,0 +1,39 @@
+detector:
+  name: "toxicity"
+  enabled: true
+  type: "huggingface"
+  
+model:
+  name: "martin-ha/toxic-comment-model"
+  cache_dir: "~/.cache/huggingface"
+  device: "auto"
+  
+settings:
+  threshold: 0.7
+  confidence_threshold: 0.8
+  batch_size: 1
+  max_length: 512
+  
+categories:
+  - "toxic"
+  - "severe_toxic" 
+  - "obscene"
+  - "threat"
+  - "insult"
+  - "identity_hate"
+  
+actions:
+  on_detection:
+    - block_content
+    - log_incident
+    - notify_user
+  
+  messages:
+    blocked: "Content flagged for toxicity. Please rephrase your message in a respectful manner."
+    warning: "This content may contain toxic language. Please review before proceeding."
+    
+logging:
+  enabled: true
+  log_level: "WARNING"
+  include_content: false  # For privacy
+  include_score: true

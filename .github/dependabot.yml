@@ -1,0 +1,71 @@
+version: 2
+updates:
+  # Enable version updates for Python/pip
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    assignees:
+      - "udsy19"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    ignore:
+      # Ignore major version updates for stable dependencies
+      - dependency-name: "torch"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "transformers"
+        update-types: ["version-update:semver-major"]
+    groups:
+      ml-dependencies:
+        patterns:
+          - "torch*"
+          - "transformers"
+          - "sentence-transformers"
+          - "tokenizers"
+          - "huggingface-hub"
+          - "safetensors"
+      data-dependencies:
+        patterns:
+          - "numpy"
+          - "pandas"
+          - "scikit-learn"
+      nlp-dependencies:
+        patterns:
+          - "spacy*"
+      web-dependencies:
+        patterns:
+          - "fastapi"
+          - "uvicorn*"
+          - "streamlit"
+          - "websockets"
+      dev-dependencies:
+        patterns:
+          - "pytest*"
+          - "black"
+          - "flake8"
+          - "mypy"
+          - "isort"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    assignees:
+      - "udsy19"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"

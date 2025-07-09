@@ -1,0 +1,170 @@
+[build-system]
+requires = ["setuptools>=69.0.0", "wheel>=0.42.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ai-safety-guardrails"
+dynamic = ["version"]
+description = "Comprehensive AI safety package for LLM applications"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Udaya Vijay Anand", email = "udayatejas2004@gmail.com"},
+]
+keywords = [
+    "ai", "safety", "guardrails", "llm", "machine-learning",
+    "security", "content-filtering", "toxicity", "pii", "openai",
+    "ollama", "transformers", "nemo-guardrails"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Security",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content :: Content Management System",
+]
+
+# Core dependencies
+dependencies = [
+    "pyyaml>=6.0.1",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.5.0",
+    "torch>=2.1.0",
+    "transformers>=4.35.0",
+    "sentence-transformers>=2.2.0",
+    "tokenizers>=0.15.0",
+    "huggingface-hub>=0.19.0",
+    "safetensors>=0.4.0",
+    "numpy>=1.26.0",
+    "pandas>=2.1.0",
+    "scikit-learn>=1.3.0",
+    "spacy>=3.7.0",
+    "loguru>=0.7.0",
+    "jinja2>=3.1.0",
+    "click>=8.0.0",
+    "rich>=13.0.0",
+    "typer>=0.9.0",
+]
+
+# Optional dependencies
+[project.optional-dependencies]
+templates = [
+    "fastapi>=0.104.1",
+    "uvicorn[standard]>=0.24.0",
+    "streamlit>=1.25.0",
+    "websockets>=12.0",
+    "python-multipart>=0.0.6",
+]
+
+gpu = [
+    "torch[cuda]>=2.1.0",
+]
+
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.5.0",
+    "isort>=5.12.0",
+]
+
+docs = [
+    "sphinx>=7.0.0",
+    "sphinx-rtd-theme>=1.3.0",
+    "myst-parser>=2.0.0",
+]
+
+monitoring = [
+    "prometheus-client>=0.19.0",
+    "psutil>=5.9.0",
+]
+
+full = [
+    "fastapi>=0.104.1",
+    "uvicorn[standard]>=0.24.0",
+    "streamlit>=1.25.0",
+    "websockets>=12.0",
+    "python-multipart>=0.0.6",
+    "prometheus-client>=0.19.0",
+    "psutil>=5.9.0",
+    "gradio>=4.0.0",
+    "jupyter>=1.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/udsy19/AI-Safety-Guardrails"
+Documentation = "https://github.com/udsy19/AI-Safety-Guardrails/blob/main/README.md"
+Repository = "https://github.com/udsy19/AI-Safety-Guardrails"
+Issues = "https://github.com/udsy19/AI-Safety-Guardrails/issues"
+
+[project.scripts]
+ai-safety = "ai_safety_guardrails.cli.main:main"
+ai-safety-create = "ai_safety_guardrails.cli.create:create_app_cli"
+ai-safety-models = "ai_safety_guardrails.cli.models:models_cli"
+
+# Note: version is handled in setup.py to avoid import issues
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ai_safety_guardrails*"]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+"ai_safety_guardrails" = [
+    "templates/**/*",
+    "configs/**/*",
+    "*.yml",
+    "*.yaml", 
+    "*.json",
+]
+
+# Development tool configurations
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["ai_safety_guardrails"]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+asyncio_mode = "auto"

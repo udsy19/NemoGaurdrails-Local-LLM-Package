@@ -1,0 +1,479 @@
+#!/usr/bin/env python3
+"""
+{{ app_name }} - AI Safety Guardrails Streamlit Dashboard
+Generated with AI Safety Guardrails Template System
+"""
+
+import asyncio
+import json
+import os
+import time
+from datetime import datetime, timedelta
+from typing import Any, Dict, List
+
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+import streamlit as st
+
+# AI Safety Guardrails imports
+from ai_safety_guardrails import SafetyGuard
+
+{% if llm_provider == 'openai' %}
+from ai_safety_guardrails.integrations import OpenAIClient
+
+{% elif llm_provider == 'ollama' %}
+from ai_safety_guardrails.integrations import OllamaClient
+
+{% elif llm_provider == '' %}
+import 
+
+{% endif %}
+
+# Configuration
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Page configuration
+st.set_page_config(
+    page_title="{{ app_name }}",
+    page_icon="🛡️",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Initialize session state
+if 'safety_guard' not in st.session_state:
+    st.session_state.safety_guard = None
+if 'llm_client' not in st.session_state:
+    st.session_state.llm_client = None
+if 'chat_history' not in st.session_state:
+    st.session_state.chat_history = []
+if 'safety_logs' not in st.session_state:
+    st.session_state.safety_logs = []
+if 'metrics' not in st.session_state:
+    st.session_state.metrics = {
+        'total_requests': 0,
+        'blocked_requests': 0,
+        'detector_stats': {},
+        'response_times': []
+    }
+
+# Async wrapper
+def run_async(coro):
+    """Run async function in Streamlit"""
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    return loop.run_until_complete(coro)
+
+@st.cache_resource
+def initialize_safety_guard():
+    """Initialize the safety guard (cached)"""
+    try:
+        guard = SafetyGuard(
+            detectors={{ detectors | tojson }},
+            config_file="config.yml"
+        )
+        return guard
+    except Exception as e:
+        st.error(f"Failed to initialize Safety Guard: {e}")
+        return None
+
+@st.cache_resource
+def initialize_llm_client():
+    """Initialize the LLM client (cached)"""
+    try:
+        {% if llm_provider == 'openai' %}
+        client = OpenAIClient(api_key=os.getenv("OPENAI_API_KEY"))
+        run_async(client.test_connection())
+        return client
+        {% elif llm_provider == 'ollama' %}
+        client = OllamaClient(host=os.getenv("OLLAMA_HOST", "http://localhost:11434"))
+        run_async(client.test_connection())
+        return client
+        {% elif llm_provider == '' %}
+        client = .(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        return client
+        {% endif %}
+    except Exception as e:
+        st.error(f"Failed to initialize LLM client: {e}")
+        return None
+
+def add_safety_log(text: str, results: Dict[str, Any], blocked: bool):
+    """Add entry to safety logs"""
+    log_entry = {
+        'timestamp': datetime.now(),
+        'text': text[:100] + "..." if len(text) > 100 else text,
+        'blocked': blocked,
+        'results': results
+    }
+    st.session_state.safety_logs.append(log_entry)
+    
+    # Keep only last 100 logs
+    if len(st.session_state.safety_logs) > 100:
+        st.session_state.safety_logs = st.session_state.safety_logs[-100:]
+
+def update_metrics(processing_time: float, blocked: bool, detector_results: Dict[str, Any]):
+    """Update metrics"""
+    metrics = st.session_state.metrics
+    metrics['total_requests'] += 1
+    if blocked:
+        metrics['blocked_requests'] += 1
+    
+    metrics['response_times'].append(processing_time)
+    if len(metrics['response_times']) > 1000:
+        metrics['response_times'] = metrics['response_times'][-1000:]
+    
+    # Update detector stats
+    for detector, result in detector_results.items():
+        if detector not in metrics['detector_stats']:
+            metrics['detector_stats'][detector] = {'triggered': 0, 'total': 0}
+        metrics['detector_stats'][detector]['total'] += 1
+        if result.get('blocked', False):
+            metrics['detector_stats'][detector]['triggered'] += 1
+
+# Sidebar
+st.sidebar.title("🛡️ AI Safety Controls")
+
+# Initialize components
+if st.sidebar.button("🔄 Initialize System"):
+    with st.spinner("Initializing AI Safety Guardrails..."):
+        st.session_state.safety_guard = initialize_safety_guard()
+        st.session_state.llm_client = initialize_llm_client()
+    
+    if st.session_state.safety_guard and st.session_state.llm_client:
+        st.sidebar.success("✅ System initialized!")
+    else:
+        st.sidebar.error("❌ Initialization failed!")
+
+# Configuration
+st.sidebar.subheader("⚙️ Configuration")
+
+# Detector toggles
+enabled_detectors = []
+for detector in {{ detectors | tojson }}:
+    if st.sidebar.checkbox(f"{detector.title()}", value=True, key=f"enable_{detector}"):
+        enabled_detectors.append(detector)
+
+# Model selection
+{% if llm_provider == 'openai' %}
+model = st.sidebar.selectbox(
+    "🤖 Model",
+    ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo-preview"],
+    index=0
+)
+{% elif llm_provider == 'ollama' %}
+model = st.sidebar.selectbox(
+    "🤖 Model", 
+    ["llama2", "llama2:13b", "mistral", "codellama"],
+    index=0
+)
+{% elif llm_provider == '' %}
+model = st.sidebar.selectbox(
+    "🤖 Model",
+    ["-3-haiku-20240307", "-3-sonnet-20240229", "-3-opus-20240229"],
+    index=0
+)
+{% endif %}
+
+# Safety thresholds
+st.sidebar.subheader("🎛️ Safety Thresholds")
+toxicity_threshold = st.sidebar.slider("Toxicity", 0.0, 1.0, 0.7, 0.1)
+pii_threshold = st.sidebar.slider("PII Sensitivity", 0.0, 1.0, 0.8, 0.1)
+injection_threshold = st.sidebar.slider("Prompt Injection", 0.0, 1.0, 0.6, 0.1)
+
+# Main content
+st.title(f"🛡️ {{{ app_name }}}")
+st.markdown(f"**AI Safety Dashboard with {{{ llm_provider.title() }}} Integration**")
+
+# Tabs
+tab1, tab2, tab3, tab4 = st.tabs(["💬 Chat", "🛡️ Safety Check", "📊 Dashboard", "⚙️ System"])
+
+# Chat Tab
+with tab1:
+    st.subheader("💬 Protected AI Chat")
+    
+    if not st.session_state.safety_guard or not st.session_state.llm_client:
+        st.warning("⚠️ Please initialize the system using the sidebar.")
+    else:
+        # Chat interface
+        with st.form("chat_form"):
+            user_input = st.text_area("Enter your message:", height=100)
+            col1, col2 = st.columns([1, 4])
+            with col1:
+                send_button = st.form_submit_button("🚀 Send", use_container_width=True)
+            with col2:
+                max_tokens = st.slider("Max Tokens", 50, 500, 150)
+        
+        if send_button and user_input:
+            start_time = time.time()
+            
+            try:
+                with st.spinner("🔍 Checking safety and generating response..."):
+                    {% if llm_provider == 'openai' %}
+                    safe_chat = st.session_state.llm_client.create_safe_chat_function(model=model)
+                    result = run_async(st.session_state.safety_guard.protect(
+                        input_text=user_input,
+                        llm_function=safe_chat,
+                        max_tokens=max_tokens
+                    ))
+                    {% elif llm_provider == 'ollama' %}
+                    safe_chat = st.session_state.llm_client.create_safe_chat_function(model=model)
+                    result = run_async(st.session_state.safety_guard.protect(
+                        input_text=user_input,
+                        llm_function=safe_chat
+                    ))
+                    {% elif llm_provider == '' %}
+                    async def _chat(prompt: str) -> str:
+                        response = await st.session_state.llm_client.messages.create(
+                            model=model,
+                            max_tokens=max_tokens,
+                            messages=[{"role": "user", "content": prompt}]
+                        )
+                        return response.content[0].text
+                    
+                    result = run_async(st.session_state.safety_guard.protect(
+                        input_text=user_input,
+                        llm_function=_chat
+                    ))
+                    {% endif %}
+                
+                processing_time = time.time() - start_time
+                
+                # Add to chat history
+                st.session_state.chat_history.append({
+                    'user': user_input,
+                    'assistant': result.response if not result.blocked else "❌ Message blocked for safety reasons",
+                    'blocked': result.blocked,
+                    'reason': result.block_reason,
+                    'timestamp': datetime.now()
+                })
+                
+                # Update logs and metrics
+                add_safety_log(user_input, result.safety_results, result.blocked)
+                update_metrics(processing_time, result.blocked, result.safety_results)
+                
+            except Exception as e:
+                st.error(f"Error: {e}")
+        
+        # Display chat history
+        if st.session_state.chat_history:
+            st.subheader("💬 Chat History")
+            for i, chat in enumerate(reversed(st.session_state.chat_history[-10:])):
+                with st.expander(f"Chat {len(st.session_state.chat_history) - i} - {chat['timestamp'].strftime('%H:%M:%S')}"):
+                    st.markdown(f"**👤 User:** {chat['user']}")
+                    if chat['blocked']:
+                        st.error(f"🛡️ **Blocked:** {chat['reason']}")
+                    else:
+                        st.markdown(f"**🤖 Assistant:** {chat['assistant']}")
+
+# Safety Check Tab
+with tab2:
+    st.subheader("🛡️ Safety Analysis")
+    
+    if not st.session_state.safety_guard:
+        st.warning("⚠️ Please initialize the system using the sidebar.")
+    else:
+        with st.form("safety_form"):
+            text_to_check = st.text_area("Enter text to analyze:", height=150)
+            check_button = st.form_submit_button("🔍 Analyze Safety", use_container_width=True)
+        
+        if check_button and text_to_check:
+            start_time = time.time()
+            
+            try:
+                with st.spinner("🔍 Analyzing text safety..."):
+                    results = run_async(st.session_state.safety_guard.analyze_text(
+                        text=text_to_check,
+                        detectors=enabled_detectors
+                    ))
+                
+                processing_time = time.time() - start_time
+                
+                # Display results
+                blocked = any(result.blocked for result in results.values())
+                
+                if blocked:
+                    st.error("🚫 **Content Blocked**")
+                else:
+                    st.success("✅ **Content Safe**")
+                
+                # Detailed results
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.subheader("📊 Detection Results")
+                    for detector, result in results.items():
+                        if result.blocked:
+                            st.error(f"🚫 **{detector.title()}**: {result.reason}")
+                        else:
+                            st.success(f"✅ **{detector.title()}**: Safe")
+                        st.caption(f"Confidence: {result.confidence:.2f}")
+                
+                with col2:
+                    st.subheader("📈 Confidence Scores")
+                    df = pd.DataFrame([
+                        {'Detector': detector.title(), 'Confidence': result.confidence, 'Status': 'Blocked' if result.blocked else 'Safe'}
+                        for detector, result in results.items()
+                    ])
+                    fig = px.bar(df, x='Detector', y='Confidence', color='Status',
+                               color_discrete_map={'Blocked': 'red', 'Safe': 'green'})
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                # Update logs and metrics
+                add_safety_log(text_to_check, results, blocked)
+                update_metrics(processing_time, blocked, {k: {'blocked': v.blocked} for k, v in results.items()})
+                
+            except Exception as e:
+                st.error(f"Error: {e}")
+
+# Dashboard Tab
+with tab3:
+    st.subheader("📊 Safety Analytics Dashboard")
+    
+    metrics = st.session_state.metrics
+    
+    if metrics['total_requests'] == 0:
+        st.info("📊 No data yet. Start using the chat or safety check to see analytics.")
+    else:
+        # Key metrics
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Total Requests", metrics['total_requests'])
+        with col2:
+            st.metric("Blocked Requests", metrics['blocked_requests'])
+        with col3:
+            block_rate = (metrics['blocked_requests'] / metrics['total_requests']) * 100
+            st.metric("Block Rate", f"{block_rate:.1f}%")
+        with col4:
+            avg_time = sum(metrics['response_times']) / len(metrics['response_times'])
+            st.metric("Avg Response Time", f"{avg_time:.2f}s")
+        
+        # Charts
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Detector performance
+            if metrics['detector_stats']:
+                detector_data = []
+                for detector, stats in metrics['detector_stats'].items():
+                    detector_data.append({
+                        'Detector': detector.title(),
+                        'Triggered': stats['triggered'],
+                        'Total': stats['total'],
+                        'Rate': (stats['triggered'] / stats['total']) * 100 if stats['total'] > 0 else 0
+                    })
+                
+                df = pd.DataFrame(detector_data)
+                fig = px.bar(df, x='Detector', y='Rate', title="Detector Trigger Rates (%)")
+                st.plotly_chart(fig, use_container_width=True)
+        
+        with col2:
+            # Response time trend
+            if len(metrics['response_times']) >= 2:
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(
+                    y=metrics['response_times'][-50:],  # Last 50 requests
+                    mode='lines+markers',
+                    name='Response Time',
+                    line=dict(color='blue')
+                ))
+                fig.update_layout(title="Response Time Trend", yaxis_title="Time (seconds)")
+                st.plotly_chart(fig, use_container_width=True)
+        
+        # Recent safety logs
+        if st.session_state.safety_logs:
+            st.subheader("📋 Recent Safety Events")
+            
+            log_data = []
+            for log in st.session_state.safety_logs[-20:]:  # Last 20 logs
+                log_data.append({
+                    'Time': log['timestamp'].strftime('%H:%M:%S'),
+                    'Text': log['text'],
+                    'Status': '🚫 Blocked' if log['blocked'] else '✅ Safe',
+                    'Detectors': len([d for d, r in log['results'].items() if r.get('blocked', False)])
+                })
+            
+            df = pd.DataFrame(log_data)
+            st.dataframe(df, use_container_width=True)
+
+# System Tab
+with tab4:
+    st.subheader("⚙️ System Information")
+    
+    # System status
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.subheader("🔧 System Status")
+        
+        if st.session_state.safety_guard:
+            st.success("✅ Safety Guard: Active")
+            try:
+                health = run_async(st.session_state.safety_guard.health_check())
+                st.info(f"🔍 Detectors Loaded: {len(health.detectors)}")
+                st.info(f"⏱️ Uptime: {health.uptime:.1f}s")
+            except:
+                st.warning("⚠️ Health check failed")
+        else:
+            st.error("❌ Safety Guard: Not initialized")
+        
+        if st.session_state.llm_client:
+            st.success(f"✅ LLM Client: {{ llm_provider.title() }}")
+        else:
+            st.error("❌ LLM Client: Not initialized")
+    
+    with col2:
+        st.subheader("📋 Configuration")
+        st.json({
+            "enabled_detectors": enabled_detectors,
+            "model": model,
+            "thresholds": {
+                "toxicity": toxicity_threshold,
+                "pii": pii_threshold,
+                "prompt_injection": injection_threshold
+            }
+        })
+    
+    # Environment check
+    st.subheader("🌍 Environment Variables")
+    
+    env_status = {}
+    {% if llm_provider == 'openai' %}
+    env_status["OPENAI_API_KEY"] = "✅ Set" if os.getenv("OPENAI_API_KEY") else "❌ Missing"
+    {% elif llm_provider == 'ollama' %}
+    env_status["OLLAMA_HOST"] = os.getenv("OLLAMA_HOST", "Default: localhost:11434")
+    {% elif llm_provider == '' %}
+    env_status["ANTHROPIC_API_KEY"] = "✅ Set" if os.getenv("ANTHROPIC_API_KEY") else "❌ Missing"
+    {% endif %}
+    env_status["AI_SAFETY_CACHE_DIR"] = os.getenv("AI_SAFETY_CACHE_DIR", "Default: ~/.ai_safety_models")
+    
+    for key, value in env_status.items():
+        if "❌" in value:
+            st.error(f"{key}: {value}")
+        elif "✅" in value:
+            st.success(f"{key}: {value}")
+        else:
+            st.info(f"{key}: {value}")
+    
+    # Clear data button
+    if st.button("🗑️ Clear All Data", type="secondary"):
+        st.session_state.chat_history = []
+        st.session_state.safety_logs = []
+        st.session_state.metrics = {
+            'total_requests': 0,
+            'blocked_requests': 0,
+            'detector_stats': {},
+            'response_times': []
+        }
+        st.success("✅ All data cleared!")
+        st.experimental_rerun()
+
+# Footer
+st.markdown("---")
+st.markdown("🛡️ **{{ app_name }}** | Powered by AI Safety Guardrails | Generated with Template System")

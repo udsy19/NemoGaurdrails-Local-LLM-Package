@@ -1,0 +1,101 @@
+# AI Safety Guardrails Configuration for {{ app_name }}
+# Generated with AI Safety Guardrails Template System
+
+detectors:
+  {% for detector in detectors %}
+  {{ detector }}:
+    enabled: true
+    {% if detector == 'toxicity' %}
+    threshold: 0.7
+    model: "martin-ha/toxic-comment-model"
+    {% elif detector == 'pii' %}
+    sensitivity: "high"
+    redact: true
+    entities: ["EMAIL", "PHONE", "SSN", "CREDIT_CARD"]
+    {% elif detector == 'prompt_injection' %}
+    threshold: 0.6
+    aggressive: true
+    {% elif detector == 'topics' %}
+    threshold: 0.7
+    blocked_topics: ["violence", "illegal_activities", "adult_content"]
+    {% elif detector == 'spam' %}
+    threshold: 0.6
+    aggressive: false
+    {% elif detector == 'fact_check' %}
+    threshold: 0.5
+    enabled: false  # Experimental feature
+    {% endif %}
+  {% endfor %}
+
+# Global safety settings
+safety:
+  fail_mode: "open"              # "open" (allow on failure) or "closed" (block on failure)
+  max_concurrent_detections: 10
+  detection_timeout: 30
+  circuit_breaker:
+    enabled: true
+    failure_threshold: 5
+    recovery_timeout: 60
+
+# Model management
+models:
+  cache_dir: "~/.ai_safety_models"
+  auto_download: true
+  download_timeout: 300
+
+# Performance settings
+performance:
+  enable_metrics: true
+  metrics_retention: 7  # days
+  timeout: 30
+  max_concurrent: 20
+
+# Logging configuration
+logging:
+  level: "INFO"
+  file: "./{{ app_name.lower().replace(' ', '_') }}_safety.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  max_file_size: "10MB"
+  backup_count: 3
+
+# API Server specific settings
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 1
+  reload: true
+  cors:
+    allow_origins: ["*"]
+    allow_methods: ["GET", "POST"]
+    allow_headers: ["*"]
+  
+# LLM Provider Configuration
+llm:
+  provider: "{{ llm_provider }}"
+  {% if llm_provider == 'openai' %}
+  default_model: "{{ model_default }}"
+  api_key_env: "OPENAI_API_KEY"
+  base_url: "https://api.openai.com/v1"
+  timeout: 120
+  {% elif llm_provider == 'ollama' %}
+  default_model: "{{ model_default }}"
+  host_env: "OLLAMA_HOST"
+  default_host: "http://localhost:11434"
+  timeout: 120
+  {% elif llm_provider == '' %}
+  default_model: "{{ model_default }}"
+  api_key_env: "ANTHROPIC_API_KEY"
+  timeout: 120
+  {% endif %}
+
+# Rate limiting (for production)
+rate_limiting:
+  enabled: false
+  requests_per_minute: 60
+  burst_size: 10
+
+# Health monitoring
+health:
+  check_interval: 30  # seconds
+  timeout: 10
+  detailed_checks: true

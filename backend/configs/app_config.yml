@@ -1,0 +1,116 @@
+app:
+  name: "AI Safety System"
+  version: "2.0.0"
+  debug: false
+  resilience_enabled: true
+  health_monitoring_enabled: true
+  graceful_degradation_enabled: true
+
+models:
+  ollama:
+    base_url: "http://localhost:11434"
+    default_model: "llama3.1:8b"
+    timeout: 120
+  huggingface:
+    cache_dir: "~/.cache/huggingface"
+    device: "auto"
+
+detectors:
+  toxicity:
+    enabled: true
+    threshold: 0.7
+    model: "martin-ha/toxic-comment-model"
+  pii:
+    enabled: true
+    sensitivity: 0.8
+    model: "en_core_web_sm"
+  prompt_injection:
+    enabled: true
+    threshold: 0.5
+  topic:
+    enabled: true
+    threshold: 0.7
+    model: "all-MiniLM-L6-v2"
+  fact_check:
+    enabled: true
+    threshold: 0.5
+  spam:
+    enabled: true
+    threshold: 0.6
+
+guardrails:
+  input_enabled: true
+  output_enabled: true
+  config_dir: "configs/guardrails"
+
+chat:
+  max_history: 100
+  max_message_length: 10000
+  session_timeout: 3600
+
+api:
+  cors_origins:
+    - "http://localhost:8501"
+    - "http://127.0.0.1:8501"
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+
+resilience:
+  circuit_breaker:
+    failure_threshold: 3
+    recovery_timeout: 30
+    enabled: true
+  
+  health_monitoring:
+    check_interval: 30
+    detailed_check_interval: 300
+    enabled: true
+  
+  graceful_degradation:
+    auto_degradation: true
+    recovery_attempts: 3
+    enabled: true
+  
+  retry_policy:
+    max_attempts: 3
+    base_delay: 1.0
+    max_delay: 60.0
+    enabled: true
+
+monitoring:
+  diagnostics_retention_hours: 24
+  health_history_size: 100
+  circuit_breaker_metrics: true
+  performance_tracking: true
+
+alerting:
+  enabled: true
+  email_notifications: false
+  webhook_notifications: false
+  console_alerts: true
+  log_alerts: true
+  alert_cooldown_minutes: 15
+  
+  # SMTP settings for email alerts (when enabled)
+  smtp:
+    host: "smtp.gmail.com"
+    port: 587
+    username: ""
+    password: ""
+    from_email: ""
+
+performance_monitoring:
+  enabled: true
+  collection_interval_seconds: 30
+  max_metric_points: 1000
+  request_tracking: true
+  function_tracking: true
+
+self_healing:
+  enabled: true
+  check_interval_seconds: 60
+  optimization_level: "balanced"  # conservative, balanced, aggressive
+  auto_memory_cleanup: true
+  auto_performance_optimization: true
+  auto_connection_reset: true

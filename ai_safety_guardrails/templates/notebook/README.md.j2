@@ -1,0 +1,313 @@
+# {{ app_name }}
+
+Interactive Jupyter Notebook for AI Safety Guardrails with {{ llm_provider.title() }} Integration
+
+## 🚀 Quick Start
+
+### 1. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Environment Setup
+
+Create a `.env` file:
+
+```bash
+# {{ llm_provider.title() }} Configuration
+{% if llm_provider == 'openai' %}
+OPENAI_API_KEY=your_openai_api_key_here
+{% elif llm_provider == 'ollama' %}
+OLLAMA_HOST=http://localhost:11434
+{% elif llm_provider == '' %}
+ANTHROPIC_API_KEY=your__api_key_here
+{% endif %}
+
+# Optional: Custom model cache directory
+AI_SAFETY_CACHE_DIR=/path/to/model/cache
+```
+
+### 3. Start Jupyter
+
+```bash
+jupyter notebook ai_safety_examples.ipynb
+```
+
+Or with JupyterLab:
+
+```bash
+jupyter lab ai_safety_examples.ipynb
+```
+
+## 📚 Notebook Contents
+
+### 🛠️ Setup and Initialization
+- **Environment Check**: Verify API keys and dependencies
+- **Safety Guard Setup**: Initialize with all detectors
+- **LLM Client Setup**: Connect to {{ llm_provider.title() }} service
+
+### 🛡️ Basic Safety Analysis
+- **Text Safety Testing**: Analyze individual text samples
+- **Detector Demonstrations**: See each detector in action
+- **Result Visualization**: Understand safety decisions
+
+### 💬 Protected AI Conversations
+- **Safe Chat Examples**: Protected LLM interactions
+- **Unsafe Input Testing**: See blocking in action
+- **Response Analysis**: Understand safety filtering
+
+### 📊 Performance Analysis
+- **Benchmark Suite**: Comprehensive safety testing
+- **Performance Metrics**: Speed and accuracy analysis
+- **Visualization Charts**: Results and trends
+
+### 🔧 Custom Configuration
+- **Threshold Tuning**: Adjust detector sensitivity
+- **Detector Combinations**: Test different setups
+- **Performance Impact**: Measure configuration effects
+
+### 🎭 Decorator API Examples
+- **Function Protection**: Using @safe_ai decorator
+- **Integration Patterns**: Different implementation approaches
+- **Error Handling**: Graceful failure management
+
+### 🏥 System Health Monitoring
+- **Health Checks**: System status verification
+- **Performance Metrics**: Real-time monitoring
+- **Resource Usage**: Memory and processing analysis
+
+### 🧪 Advanced Testing
+- **Edge Case Testing**: Unusual input handling
+- **Stress Testing**: Performance under load
+- **Multi-language Support**: Unicode and international text
+
+## 🎯 Learning Objectives
+
+After completing this notebook, you'll understand:
+
+### Safety Concepts
+- **Multi-layered Protection**: How different detectors work together
+- **Threshold Management**: Balancing security and usability
+- **Performance Trade-offs**: Speed vs accuracy considerations
+
+### Implementation Patterns
+- **Library API**: Direct SafetyGuard usage
+- **Decorator API**: Transparent function protection
+- **Custom Configuration**: Tailoring to specific needs
+
+### Production Considerations
+- **Performance Monitoring**: Tracking system health
+- **Error Handling**: Graceful degradation strategies
+- **Scaling Considerations**: Multi-user and high-load scenarios
+
+## 📋 Prerequisites
+
+### Technical Requirements
+- **Python 3.9+**: Required for AI Safety Guardrails
+- **Jupyter**: Notebook or JupyterLab environment
+- **Internet Connection**: For model downloads
+- **Storage**: ~2GB for model cache
+
+### Knowledge Requirements
+- **Basic Python**: Understanding of async/await
+- **API Concepts**: RESTful services and authentication
+- **ML Basics**: Understanding of confidence scores and thresholds
+
+## 🔧 Customization
+
+### Adding New Test Cases
+```python
+# Add to benchmark_results section
+new_test = {
+    "text": "Your test text here",
+    "expected": "safe" or "blocked",
+    "category": "custom"
+}
+test_cases.append(new_test)
+```
+
+### Custom Detector Configuration
+```python
+# Create specialized safety guard
+custom_guard = SafetyGuard(detectors=[
+    DetectorConfig("toxicity", threshold=0.8),
+    DetectorConfig("pii", sensitivity="medium")
+])
+```
+
+### Visualization Customization
+```python
+# Modify plotting parameters
+plt.figure(figsize=(15, 10))
+sns.set_style("whitegrid")
+# Your custom plots here
+```
+
+## 📊 Included Visualizations
+
+### Performance Charts
+- **Accuracy by Category**: Detector performance breakdown
+- **Processing Time Distribution**: Speed analysis
+- **Confidence Score Histograms**: Decision certainty
+- **Threshold Comparison**: Sensitivity impact
+
+### Safety Analytics
+- **Block Rate Trends**: Safety decision patterns
+- **Detector Trigger Rates**: Individual detector performance
+- **Response Time Trends**: Performance over time
+- **Error Rate Analysis**: System reliability
+
+## 🧪 Benchmark Tests
+
+### Standard Test Suite
+- **Safe Content**: Normal, acceptable text
+- **PII Detection**: Personal information identification
+- **Prompt Injection**: AI manipulation attempts
+- **Spam Detection**: Promotional content filtering
+- **Toxicity Detection**: Harmful language identification
+
+### Custom Test Categories
+- **Domain-Specific**: Industry-relevant content
+- **Edge Cases**: Unusual input scenarios
+- **Multilingual**: International language support
+- **Performance**: Speed and resource testing
+
+## 🔒 Security Considerations
+
+### API Key Management
+- **Environment Variables**: Secure key storage
+- **Never Commit Keys**: Git ignore patterns
+- **Rotation Strategy**: Regular key updates
+
+### Data Privacy
+- **Local Processing**: On-device safety checking
+- **No Data Retention**: Temporary analysis only
+- **Anonymization**: PII handling best practices
+
+### Production Deployment
+- **Resource Limits**: Memory and CPU constraints
+- **Error Recovery**: Graceful failure handling
+- **Monitoring Setup**: Health and performance tracking
+
+## 🚀 Advanced Usage
+
+### Batch Processing
+```python
+# Process multiple texts efficiently
+texts = ["text1", "text2", "text3"]
+results = await safety_guard.batch_analyze(texts)
+```
+
+### Custom Actions
+```python
+# Define custom blocking behavior
+def custom_action(result, text):
+    if result.confidence > 0.9:
+        send_alert(f"High confidence block: {result.reason}")
+
+guard = SafetyGuard(on_blocked=custom_action)
+```
+
+### Performance Optimization
+```python
+# Optimize for speed vs accuracy
+fast_guard = SafetyGuard(
+    detectors=["toxicity"],  # Fewer detectors
+    circuit_breaker=True,    # Fail fast
+    max_concurrent=1         # Single-threaded
+)
+```
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+**Jupyter kernel crashes**
+- Reduce concurrent detections in config
+- Check available memory
+- Restart kernel and clear outputs
+
+**Model download fails**
+- Check internet connection
+- Verify disk space
+- Clear model cache and retry
+
+**Slow performance**
+- Reduce detector count
+- Increase thresholds (less sensitive)
+- Use fewer test cases
+
+**API connection errors**
+- Verify API keys in environment
+- Check service availability
+- Review network connectivity
+
+### Debug Mode
+
+Enable detailed logging:
+```python
+import logging
+logging.getLogger('ai_safety_guardrails').setLevel(logging.DEBUG)
+```
+
+### Performance Profiling
+
+Monitor resource usage:
+```python
+import psutil
+import time
+
+def profile_function(func):
+    start_memory = psutil.virtual_memory().used
+    start_time = time.time()
+    
+    result = func()
+    
+    end_time = time.time()
+    end_memory = psutil.virtual_memory().used
+    
+    print(f"Time: {end_time - start_time:.3f}s")
+    print(f"Memory: {(end_memory - start_memory) / 1024 / 1024:.1f}MB")
+    
+    return result
+```
+
+## 📚 Additional Resources
+
+### Documentation
+- **API Reference**: Complete method documentation
+- **Configuration Guide**: All available settings
+- **Best Practices**: Production deployment tips
+
+### Examples
+- **Integration Patterns**: Common use cases
+- **Custom Detectors**: Building your own
+- **Scaling Strategies**: High-volume deployments
+
+### Community
+- **GitHub Issues**: Bug reports and feature requests
+- **Discussions**: Community Q&A
+- **Contributing**: How to contribute code
+
+## 📈 Next Steps
+
+### Immediate Actions
+1. **Run All Cells**: Complete the full notebook
+2. **Customize Tests**: Add your specific use cases
+3. **Tune Thresholds**: Optimize for your requirements
+
+### Integration Planning
+1. **Production Setup**: Plan deployment architecture
+2. **Monitoring Strategy**: Define health checks
+3. **Performance Targets**: Set acceptable latency
+
+### Continuous Improvement
+1. **Regular Updates**: Keep models current
+2. **Performance Review**: Monitor and optimize
+3. **User Feedback**: Collect and incorporate input
+
+## 📝 License
+
+This project is generated using AI Safety Guardrails templates.
+See the main package license for details.

@@ -1,0 +1,101 @@
+detector:
+  name: "fact_check"
+  enabled: true
+  type: "hybrid"
+  
+settings:
+  threshold: 0.5
+  confidence_threshold: 0.7
+  check_claims: true
+  verify_sources: false  # Requires external API integration
+  
+claim_detection:
+  enabled: true
+  keywords:
+    - "studies show"
+    - "research proves"
+    - "scientists say"
+    - "according to"
+    - "data shows"
+    - "statistics indicate"
+    - "experts claim"
+    - "it is proven that"
+    - "fact:"
+    - "the truth is"
+    
+  patterns:
+    - regex: '\b\d+% of .+ (believe|think|say|report)\b'
+      weight: 0.8
+    - regex: '\b(always|never|all|none|every|only) .+ (are|do|have)\b'
+      weight: 0.6
+    - regex: '\b(causes?|prevents?|cures?|treats?) .+\b'
+      weight: 0.7
+
+categories:
+  - name: "medical_claims"
+    patterns:
+      - "cures cancer"
+      - "prevents disease"
+      - "medical breakthrough"
+      - "health benefits"
+    threshold: 0.8
+    severity: "high"
+    
+  - name: "scientific_claims"
+    patterns:
+      - "climate change"
+      - "global warming"
+      - "scientific consensus"
+      - "peer reviewed"
+    threshold: 0.7
+    severity: "medium"
+    
+  - name: "statistical_claims"
+    patterns:
+      - "percentage of"
+      - "probability that"
+      - "likelihood of"
+      - "survey shows"
+    threshold: 0.6
+    severity: "medium"
+    
+  - name: "historical_claims"
+    patterns:
+      - "historical fact"
+      - "happened in"
+      - "documented evidence"
+      - "historical record"
+    threshold: 0.5
+    severity: "low"
+
+verification:
+  enabled: false  # Would require external fact-checking APIs
+  sources:
+    - "snopes"
+    - "factcheck.org"
+    - "politifact"
+  timeout: 5000  # ms
+  
+actions:
+  on_detection:
+    - flag_for_verification
+    - add_disclaimer
+    - log_claim
+    
+  messages:
+    unverified: "This content contains claims that have not been verified. Please verify information from reliable sources."
+    flagged: "This content has been flagged for fact-checking. Information may require verification."
+    
+disclaimers:
+  enabled: true
+  templates:
+    - "Please verify this information from reliable sources."
+    - "This claim requires fact-checking."
+    - "Consider checking multiple sources for this information."
+    
+logging:
+  enabled: true
+  log_level: "INFO"
+  include_content: false
+  include_claims: true
+  include_confidence: true

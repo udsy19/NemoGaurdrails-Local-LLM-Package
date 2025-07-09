@@ -1,0 +1,240 @@
+# {{ app_name }}
+
+AI Safety Protected Chat Application powered by [AI Safety Guardrails](https://github.com/udsy19/NemoGaurdrails-Package).
+
+## Features
+
+- 🛡️ **AI Safety Protection**: Comprehensive content filtering using {{ detectors | length }} detectors
+- 🤖 **{{ llm_provider | title }} Integration**: Seamless LLM interaction with safety checks
+- ⚡ **Real-time Monitoring**: Performance metrics and health monitoring
+- 🔧 **Configurable**: Easy-to-modify safety settings
+
+## Active Safety Detectors
+
+{% for detector in detectors -%}
+- **{{ detector | title }}**: {% if detector == 'toxicity' %}Detects harmful, offensive, or toxic content{% elif detector == 'pii' %}Identifies personally identifiable information{% elif detector == 'prompt_injection' %}Prevents AI manipulation attempts{% elif detector == 'topics' %}Filters restricted topic categories{% elif detector == 'fact_check' %}Validates factual accuracy{% elif detector == 'spam' %}Identifies spam and promotional content{% else %}Custom safety detection{% endif %}
+{% endfor %}
+
+## Quick Start
+
+### 1. Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Configure Environment
+
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit .env with your API keys
+{% for env_var in llm_config.env_vars -%}
+{{ env_var }}=your_{{ env_var.lower() }}_here
+{% endfor %}
+```
+
+### 3. Run the Application
+
+```bash
+python main.py
+```
+
+## Usage
+
+### Interactive Chat
+
+The application provides an interactive chat interface with safety protection:
+
+```
+🚀 Starting interactive chat...
+Type 'quit', 'exit', or 'bye' to end the conversation.
+Type 'health' to check system health.
+Type 'metrics' to see performance metrics.
+--------------------------------------------------
+
+👤 You: Hello, how are you?
+🤖 Assistant: Hello! I'm doing well, thank you for asking. How can I help you today?
+   ⏱️  Processing time: 0.845s
+
+👤 You: health
+🏥 System Health: ✅ HEALTHY
+   Detectors: {{ detectors | length }}
+   Requests: 1
+
+👤 You: metrics
+📊 Performance Metrics:
+   Total requests: 1
+   Blocked requests: 0
+   Success rate: 100.0%
+   Avg processing time: 0.845s
+```
+
+### Safety Features
+
+The application automatically:
+
+1. **Analyzes Input**: Checks user messages for safety issues
+2. **Processes Safely**: Only sends safe content to the LLM
+3. **Validates Output**: Ensures LLM responses meet safety standards
+4. **Provides Feedback**: Shows why content was blocked and processing metrics
+
+## Configuration
+
+### Safety Settings
+
+Edit `ai_safety_config.yml` to customize safety behavior:
+
+```yaml
+detectors:
+  toxicity:
+    enabled: true
+    threshold: 0.7  # Lower = more sensitive
+  
+  pii:
+    enabled: true
+    sensitivity: "medium"  # low, medium, high
+```
+
+### LLM Settings
+
+The application is configured for {{ llm_provider | title }}:
+
+{% if llm_provider == 'openai' -%}
+- **Model**: {{ llm_config.model_default }}
+- **API Key**: Set `OPENAI_API_KEY` in your environment
+- **Documentation**: https://platform.openai.com/docs
+
+{% elif llm_provider == 'ollama' -%}
+- **Model**: {{ llm_config.model_default }}
+- **Host**: Set `OLLAMA_HOST` (default: http://localhost:11434)
+- **Documentation**: https://ollama.ai/
+
+To use Ollama:
+1. Install Ollama: https://ollama.ai/
+2. Pull a model: `ollama pull {{ llm_config.model_default }}`
+3. Start Ollama: `ollama serve`
+
+{% elif llm_provider == '' -%}
+- **Model**: {{ llm_config.model_default }}
+- **API Key**: Set `ANTHROPIC_API_KEY` in your environment
+- **Documentation**: https://docs..com/
+
+{% else -%}
+- **Model**: {{ llm_config.model_default }}
+- **Configuration**: Update the `llm_chat` method in `main.py`
+- **API Key**: Set {{ llm_config.env_vars[0] if llm_config.env_vars else 'YOUR_API_KEY' }} in your environment
+
+{% endif -%}
+
+## Advanced Usage
+
+### Programmatic Usage
+
+You can also use the safety protection programmatically:
+
+```python
+from ai_safety_guardrails import SafetyGuard
+
+# Create safety guard
+guard = SafetyGuard(
+    detectors=["toxicity", "pii"],
+    config="./ai_safety_config.yml"
+)
+
+# Protect LLM interaction
+result = await guard.protect(
+    input_text="User message",
+    llm_function=your_llm_function
+)
+
+if result.blocked:
+    print(f"Blocked: {result.block_reason}")
+else:
+    print(f"Response: {result.response}")
+```
+
+### Using Decorators
+
+For even simpler integration:
+
+```python
+from ai_safety_guardrails import safe_ai
+
+@safe_ai(detectors=["toxicity", "pii"])
+def my_llm_function(user_input):
+    # Your LLM code here
+    return llm_response
+
+# Usage is completely transparent
+response = my_llm_function("Hello world")
+```
+
+## Monitoring and Metrics
+
+### Health Checks
+
+```bash
+# Check system health
+ai-safety health --config ai_safety_config.yml
+```
+
+### Performance Metrics
+
+The application tracks:
+- **Total requests processed**
+- **Blocked requests count**
+- **Success rate percentage**
+- **Average processing time**
+- **Per-detector performance**
+
+### Model Management
+
+```bash
+# List available models
+ai-safety-models list
+
+# Download specific models
+ai-safety-models download --detector toxicity
+
+# Clear model cache
+ai-safety-models clear-cache --all
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **API Key Errors**
+   - Ensure your {{ llm_config.env_vars[0] if llm_config.env_vars else 'API_KEY' }} is set correctly
+   - Check the API key has sufficient permissions
+
+2. **Model Loading Issues**
+   - Run `ai-safety-models download --all` to pre-download models
+   - Check internet connectivity for model downloads
+
+3. **Performance Issues**
+   - Reduce the number of active detectors
+   - Adjust detection thresholds in config
+   - Use model caching for faster startup
+
+### Debug Mode
+
+Enable debug logging:
+
+```bash
+export AI_SAFETY_LOG_LEVEL=DEBUG
+python main.py
+```
+
+### Getting Help
+
+- 📖 **Documentation**: https://github.com/udsy19/NemoGaurdrails-Package/blob/main/README.md
+- 🐛 **Issues**: https://github.com/udsy19/NemoGaurdrails-Package/issues
+- 💬 **Discussions**: https://github.com/udsy19/NemoGaurdrails-Package/discussions
+
+## License
+
+This application was generated using the AI Safety Guardrails template system.
+See the [AI Safety Guardrails license](https://github.com/udsy19/NemoGaurdrails-Package/blob/main/LICENSE) for details.

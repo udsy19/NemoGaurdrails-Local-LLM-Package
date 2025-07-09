@@ -1,0 +1,64 @@
+detector:
+  name: "pii"
+  enabled: true
+  type: "spacy"
+  
+model:
+  name: "en_core_web_sm"
+  confidence_threshold: 0.8
+  
+settings:
+  sensitivity: 0.8
+  redaction_enabled: true
+  redaction_char: "*"
+  
+entities:
+  - name: "PERSON"
+    enabled: true
+    confidence: 0.8
+  - name: "EMAIL" 
+    enabled: true
+    confidence: 0.9
+  - name: "PHONE"
+    enabled: true
+    confidence: 0.9
+  - name: "SSN"
+    enabled: true
+    confidence: 0.95
+  - name: "CREDIT_CARD"
+    enabled: true
+    confidence: 0.95
+  - name: "ADDRESS"
+    enabled: true
+    confidence: 0.7
+  - name: "DATE_OF_BIRTH"
+    enabled: true
+    confidence: 0.8
+    
+patterns:
+  - name: "email_pattern"
+    regex: '\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    entity_type: "EMAIL"
+  - name: "phone_pattern"
+    regex: '\b\d{3}[-.]?\d{3}[-.]?\d{4}\b'
+    entity_type: "PHONE"
+  - name: "ssn_pattern"
+    regex: '\b\d{3}-\d{2}-\d{4}\b'
+    entity_type: "SSN"
+
+actions:
+  on_detection:
+    - redact_content
+    - log_incident
+    - notify_user
+    
+  messages:
+    detected: "Personal information detected and redacted for privacy."
+    warning: "This content may contain personal information. Please review."
+    
+logging:
+  enabled: true
+  log_level: "INFO"
+  include_content: false  # Never log PII content
+  include_entities: true
+  include_positions: false

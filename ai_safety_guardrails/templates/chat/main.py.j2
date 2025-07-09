@@ -1,0 +1,265 @@
+#!/usr/bin/env python3
+"""
+{{ app_name }} - AI Safety Protected Chat Application
+
+This application demonstrates how to use AI Safety Guardrails to protect
+LLM interactions using the {{ llm_provider }} provider.
+
+Generated with AI Safety Guardrails template system.
+"""
+
+import asyncio
+import os
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+# Import AI Safety Guardrails
+from ai_safety_guardrails import DetectorConfig, SafetyGuard
+
+# Import LLM provider
+{{ llm_config.import_statement }}
+
+
+class SafeChatApp:
+    """Safe chat application with AI safety protection."""
+    
+    def __init__(self):
+        """Initialize the chat application."""
+        # Load safety configuration
+        config_path = Path(__file__).parent / "ai_safety_config.yml"
+        
+        # Initialize safety guard
+        self.safety_guard = SafetyGuard(
+            detectors=[
+                {% for detector in detectors -%}
+                "{{ detector }}",
+                {% endfor -%}
+            ],
+            config=str(config_path) if config_path.exists() else None
+        )
+        
+        # Initialize LLM client
+        self.llm_client = {{ llm_config.client_init }}
+        self.model = "{{ llm_config.model_default }}"
+        
+        print(f"🛡️  {self.__class__.__name__} initialized")
+        print(f"🤖 LLM Provider: {{ llm_provider }}")
+        print(f"🔍 Active detectors: {{ ', '.join(detectors) }}")
+        print()
+    
+    {% if llm_provider == 'openai' -%}
+    async def llm_chat(self, message: str) -> str:
+        """Call OpenAI API safely."""
+        try:
+            response = self.llm_client.{{ llm_config.chat_method }}(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a helpful AI assistant."},
+                    {"role": "user", "content": message}
+                ],
+                max_tokens=1000,
+                temperature=0.7
+            )
+            return response.{{ llm_config.response_accessor }}
+            
+        except Exception as e:
+            raise Exception(f"LLM call failed: {e}")
+    
+    {% elif llm_provider == 'ollama' -%}
+    async def llm_chat(self, message: str) -> str:
+        """Call Ollama API safely."""
+        try:
+            response = self.llm_client.{{ llm_config.chat_method }}(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a helpful AI assistant."},
+                    {"role": "user", "content": message}
+                ]
+            )
+            return response['{{ llm_config.response_accessor }}']
+            
+        except Exception as e:
+            raise Exception(f"LLM call failed: {e}")
+    
+    {% elif llm_provider == '' -%}
+    async def llm_chat(self, message: str) -> str:
+        """Call  API safely."""
+        try:
+            response = self.llm_client.{{ llm_config.chat_method }}(
+                model=self.model,
+                max_tokens=1000,
+                messages=[
+                    {"role": "user", "content": message}
+                ]
+            )
+            return response.{{ llm_config.response_accessor }}
+            
+        except Exception as e:
+            raise Exception(f"LLM call failed: {e}")
+    
+    {% else -%}
+    async def llm_chat(self, message: str) -> str:
+        """Call your LLM API safely."""
+        try:
+            # TODO: Implement your LLM integration here
+            # Example:
+            # response = self.llm_client.{{ llm_config.chat_method }}(...)
+            # return response.{{ llm_config.response_accessor }}
+            
+            # Placeholder response
+            return f"Echo: {message} (Replace this with your LLM integration)"
+            
+        except Exception as e:
+            raise Exception(f"LLM call failed: {e}")
+    
+    {% endif -%}
+    async def process_message(self, user_input: str) -> dict:
+        """Process a user message through the safety pipeline."""
+        try:
+            # Use SafetyGuard to protect the LLM interaction
+            result = await self.safety_guard.protect(
+                input_text=user_input,
+                llm_function=self.llm_chat,
+                context={
+                    "user_id": "demo_user",
+                    "app_name": "{{ app_name }}"
+                }
+            )
+            
+            return {
+                "success": True,
+                "blocked": result.blocked,
+                "response": result.response,
+                "block_reason": result.block_reason,
+                "processing_time": result.processing_time,
+                "input_results": {name: {
+                    "blocked": r.blocked,
+                    "confidence": r.confidence,
+                    "reason": r.reason
+                } for name, r in result.input_results.items()},
+                "output_results": {name: {
+                    "blocked": r.blocked,
+                    "confidence": r.confidence,
+                    "reason": r.reason
+                } for name, r in result.output_results.items()}
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    async def run_interactive_chat(self):
+        """Run interactive chat loop."""
+        print("🚀 Starting interactive chat...")
+        print("Type 'quit', 'exit', or 'bye' to end the conversation.")
+        print("Type 'health' to check system health.")
+        print("Type 'metrics' to see performance metrics.")
+        print("-" * 50)
+        
+        while True:
+            try:
+                # Get user input
+                user_input = input("\n👤 You: ").strip()
+                
+                if not user_input:
+                    continue
+                
+                # Handle special commands
+                if user_input.lower() in ['quit', 'exit', 'bye']:
+                    print("👋 Goodbye!")
+                    break
+                
+                if user_input.lower() == 'health':
+                    health = await self.safety_guard.health_check()
+                    status = "✅ HEALTHY" if health["overall_healthy"] else "❌ UNHEALTHY"
+                    print(f"\n🏥 System Health: {status}")
+                    print(f"   Detectors: {len(health['detectors'])}")
+                    print(f"   Requests: {health['metrics']['total_requests']}")
+                    continue
+                
+                if user_input.lower() == 'metrics':
+                    metrics = self.safety_guard.get_metrics()
+                    print(f"\n📊 Performance Metrics:")
+                    print(f"   Total requests: {metrics['total_requests']}")
+                    print(f"   Blocked requests: {metrics['blocked_requests']}")
+                    print(f"   Success rate: {metrics['success_rate']:.1%}")
+                    print(f"   Avg processing time: {metrics['avg_processing_time']:.3f}s")
+                    continue
+                
+                # Process the message
+                print("🤖 Assistant: ", end="", flush=True)
+                result = await self.process_message(user_input)
+                
+                if result["success"]:
+                    if result["blocked"]:
+                        print(f"🚫 Message blocked: {result['block_reason']}")
+                        
+                        # Show which detectors triggered
+                        triggered = []
+                        for name, res in result['input_results'].items():
+                            if res['blocked']:
+                                triggered.append(f"{name} ({res['confidence']:.2f})")
+                        
+                        if triggered:
+                            print(f"   Triggered by: {', '.join(triggered)}")
+                    else:
+                        print(result["response"])
+                        
+                        # Show processing time
+                        if result["processing_time"]:
+                            print(f"   ⏱️  Processing time: {result['processing_time']:.3f}s")
+                else:
+                    print(f"❌ Error: {result['error']}")
+            
+            except KeyboardInterrupt:
+                print("\n👋 Goodbye!")
+                break
+            except Exception as e:
+                print(f"\n❌ Unexpected error: {e}")
+    
+    async def cleanup(self):
+        """Clean up resources."""
+        if hasattr(self, 'safety_guard'):
+            await self.safety_guard.cleanup()
+
+
+async def main():
+    """Main application entry point."""
+    app = None
+    
+    try:
+        # Check required environment variables
+        required_env_vars = {{ llm_config.env_vars }}
+        missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+        
+        if missing_vars:
+            print("❌ Missing required environment variables:")
+            for var in missing_vars:
+                print(f"   {var}")
+            print("\nPlease set these variables in your .env file or environment.")
+            return 1
+        
+        # Create and run the chat application
+        app = SafeChatApp()
+        await app.run_interactive_chat()
+        
+    except KeyboardInterrupt:
+        print("\n👋 Goodbye!")
+    except Exception as e:
+        print(f"❌ Application error: {e}")
+        return 1
+    finally:
+        if app:
+            await app.cleanup()
+    
+    return 0
+
+
+if __name__ == "__main__":
+    exit(asyncio.run(main()))
